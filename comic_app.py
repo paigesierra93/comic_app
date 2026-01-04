@@ -427,6 +427,51 @@ if remaining <= 0:
     st.stop()
 
 st.sidebar.markdown("---")
+# --- GITHUB SYNC BUTTON ---
+st.sidebar.divider()
+if st.sidebar.button("☁️ Sync to Cloud (Save)"):
+    try:
+        from github import Github
+        # 1. Get the Key from the Secrets Vault
+        token = st.secrets["github"]["token"]
+        repo_name = st.secrets["github"]["repo_name"]
+        
+        # 2. Login as the Robot
+        g = Github(token)
+        repo = g.get_repo(repo_name)
+        
+        # 3. List of files we want to save
+        files_to_save = ["roster_completed.csv"]
+        # Add all images currently in the folder
+        import glob
+        images = glob.glob("character_images/*.png") + glob.glob("character_images/*.jpg")
+        files_to_save.extend(images)
+        
+        status_text = st.sidebar.empty()
+        status_text.text("⏳ Connecting to Cloud...")
+        
+        # 4. Upload loop
+        for file_path in files_to_save:
+            file_name = file_path # e.g., "character_images/Batman.png"
+            
+            # Read the file data
+            if os.path.exists(file_path):
+                with open(file_path, "rb") as f:
+                    content = f.read()
+                
+                # Check if file exists on GitHub to decide: Update or Create?
+                try:
+                    contents = repo.get_contents(file_name)
+                    repo.update_file(contents.path, f"Update {file_name}", content, contents.sha)
+                except:
+                    repo.create_file(file_name, f"Create {file_name}", content)
+        
+        status_text.success("✅ Saved to Cloud!")
+        time.sleep(2)
+        status_text.empty()
+        
+    except Exception as e:
+        st.sidebar.error(f"Save Failed: {e}")
 st.sidebar.title("🦇 Studio Tools")
 if st.sidebar.button("🔄 Reload Roster"):
     with st.spinner("Rebuilding Universe files..."):
