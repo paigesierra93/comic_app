@@ -407,15 +407,25 @@ if 'roster_loaded' not in st.session_state:
 # ==========================================
 # 6. SIDEBAR
 # ==========================================
-st.sidebar.title("🔑 Security Check")
-api_key_input = st.sidebar.text_input("Paste Google API Key here:", type="password")
+# --- SMART SECURITY CHECK ---
+api_key = None
 
-if not api_key_input:
+# 1. Try to get key from Cloud Secrets (The Vault)
+if "google" in st.secrets and "api_key" in st.secrets["google"]:
+    api_key = st.secrets["google"]["api_key"]
+    st.sidebar.success("✅ AI Core Online") # Shows a green success message instead of a text box
+else:
+    # 2. If not in Vault, ask manually (Backup)
+    st.sidebar.title("🔑 Security Check")
+    api_key = st.sidebar.text_input("Paste Google API Key here:", type="password")
+
+# 3. Stop if we still don't have a key
+if not api_key:
     st.warning("👈 Please paste your Google API Key in the sidebar to start!")
-    st.stop() 
+    st.stop()
 
 try:
-    genai.configure(api_key=api_key_input)
+    genai.configure(api_key=api_key)
 except Exception as e:
     st.error(f"API Key Error: {e}")
     st.stop()
