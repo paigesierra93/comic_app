@@ -891,9 +891,12 @@ else:
                         st.markdown(f"**{row['Title']}** #{row['Issue']}")
                         st.caption(row['Description'])
             else: st.info("No art uploaded yet.")
-
+    
     elif mode == "❓ Help / Tutorial":
         st.title("🎓 HERO ACADEMY: BASIC TRAINING")
+        
+        # 👇 THIS IS THE MISSING LINE THAT FIXES THE ERROR 👇
+        tab_joe, tab_dad = st.tabs(["🦸‍♂️ CADET TRAINING", "🔒 COMMANDER ACCESS (Dad)"])
         
         with tab_joe:
             st.markdown("### 🦸‍♂️ CADET TRAINING MANUAL")
@@ -957,7 +960,7 @@ else:
                 safe, msg = check_safety(test_word)
                 if not safe: st.success("✅ SHIELD ACTIVE.")
                 else: st.info("Try a banned word.")
-               
+                
         with tab_dad:
             st.markdown("### 🔒 Security Clearance Required")
             pwd = st.text_input("Enter Admin Password:", type="password", key="admin_tut")
@@ -968,25 +971,25 @@ else:
                 # 👨‍✈️ COMMANDER'S BRIEFING (Dad's Guide)
                 
                 ### 1. Dashboard & Data Entry
-                * **Why specific inputs?** The AI needs structured data (Name, Role, Relations) to roleplay correctly. If Joe skips "Relationships", the chat will feel generic.
-                * **New Feature:** The dashboard now supports 18 different data points (Origin, Costume, etc.) to act as a full "Wiki" for his world.
+                * **Why specific inputs?** The AI needs structured data (Name, Role, Relations) to roleplay correctly.
+                * **New Feature:** The dashboard now supports 18 different data points acting as a full "Wiki".
                 
                 ### 2. Chat Safety Features
-                * **Hard-Coded Ethics:** The code actively scans for PII (Phone numbers) and Profanity *before* sending data to Google.
+                * **Hard-Coded Ethics:** The code actively scans for PII and Profanity *before* sending data to Google.
                 * **Copyright Check:** Forces creativity by banning major IP names.
                 
                 ### 3. Timeline & Logic Cop
-                * **Educational Value:** The "Logic Cop" isn't just a bug checker; it teaches **Critical Thinking**. It forces him to consider cause-and-effect in his storytelling.
+                * **Educational Value:** The "Logic Cop" teaches **Critical Thinking**.
                 
                 ### 4. Script Writer & Archive
-                * **File Management:** Scripts are now saved as real `.txt` files in the `saved_scripts` folder. You can back these up to a USB drive if you want.
+                * **File Management:** Scripts are saved as real `.txt` files.
                 
                 ### 5. Portfolio & Permanence
-                * **Pride of Work:** This section is designed to make him feel like a professional. It separates "sketches" from "published work."
+                * **Pride of Work:** Separates "sketches" from "published work."
                 
                 ---
                 ### ⚠️ COMMANDER'S DUTY:
-                **Check the `security_log.csv` file weekly.** This code blocks bad inputs, but it doesn't parent him. The logs will tell you if he's trying to push boundaries.
+                **Check the `security_log.csv` file weekly.**
                 """)
                 
                 if os.path.exists(LOG_FILE):
