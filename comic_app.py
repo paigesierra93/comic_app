@@ -16,8 +16,13 @@ import google.generativeai as genai
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="Joe's Comic Studio", page_icon="🦇", layout="wide")
-
+# --- PAGE CONFIG (SMART LAYOUT) ---
+st.set_page_config(
+    page_title="Joe's Comic Studio",
+    page_icon="🦇",
+    layout="wide",  # "wide" uses the whole screen on Laptops
+    initial_sidebar_state="collapsed" # Starts closed on Phones/Tablets
+)
 # ==========================================
 # 1. DAD CONFIGURATION (EDIT THIS!)
 # ==========================================
@@ -880,11 +885,20 @@ else:
     elif mode == "❓ Help / Tutorial":
         st.title("🎓 HERO ACADEMY: BASIC TRAINING")
         
-        tab_joe, tab_dad = st.tabs(["🦸‍♂️ CADET TRAINING", "🔒 COMMANDER ACCESS (Dad)"])
-        
         with tab_joe:
             st.markdown("### 🦸‍♂️ CADET TRAINING MANUAL")
             
+            # --- NEW SECTION: CLOUD SYNC ---
+            with st.expander("☁️ SAVING YOUR WORK (The Cloud Button)"):
+                st.markdown("""
+                **We have upgraded your headquarters! You don't need to download files anymore.**
+                
+                * **The Magic Button:** Look at the Sidebar (left). Find the **"☁️ Sync to Cloud"** button.
+                * **How to Save:** When you finish a hero or a script, just click that button ONCE.
+                * **What happens:** The computer instantly teleports your Hero, their Picture, and your Scripts to the secret Cloud Vault. 
+                * **Access Anywhere:** You can now open this website on any computer (or phone), and your heroes will be there!
+                """)
+
             with st.expander("1. CHARACTER DASHBOARD (How to Build Heroes)"):
                 st.markdown("""
                 This is your Headquarters. You have 4 Tabs to fill out:
@@ -912,21 +926,14 @@ else:
                 * **The Logic Cop:** If you try to add an event that makes no sense (like *'Nana was trained by her own grandson'*), the AI will stop you and say **"LOGIC ERROR"**.
                 * **Override:** You can force it to happen if you explain it's Time Travel or Multiverse weirdness.
                 """)
+                
+            with st.expander("4. PORTFOLIO & SCRIPTS"):
+                 st.markdown("""
+                 * **Scripts:** Write your story pages here. Remember to click "Sync to Cloud" when you are done to save the text file!
+                 * **Portfolio:** This is your museum. Only upload finished artwork here.
+                 """)
 
-            with st.expander("4. SCRIPT WRITER (The Archive)"):
-                st.markdown("""
-                Use this to write full comic pages (Page 1, Panel 1...).
-                * **Saving:** Click `💾 Save to Script Archive`. This saves it to a special folder (`saved_scripts`) on your computer.
-                * **Loading:** Use the dropdown menu to pick an old script and keep working on it.
-                """)
-
-            with st.expander("5. PORTFOLIO (The Vault)"):
-                st.markdown("""
-                * **Why use this?** This is for FINISHED work only.
-                * **Permanence:** Once you upload art here, it's part of your professional record. Treat it like a museum display.
-                """)
-
-            with st.expander("6. IDEA GENERATOR (The Spark)"):
+            with st.expander("5. IDEA GENERATOR (The Spark)"):
                 st.markdown("""
                 * **How it works:** It grabs 2 random people from your Vault and invents a story.
                 * **The Rule:** You need at least **2 Characters** saved first.
@@ -940,7 +947,7 @@ else:
                 safe, msg = check_safety(test_word)
                 if not safe: st.success("✅ SHIELD ACTIVE.")
                 else: st.info("Try a banned word.")
-
+               
         with tab_dad:
             st.markdown("### 🔒 Security Clearance Required")
             pwd = st.text_input("Enter Admin Password:", type="password", key="admin_tut")
