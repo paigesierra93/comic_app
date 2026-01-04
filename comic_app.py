@@ -287,6 +287,7 @@ def load_script_file(filename):
     return ""
 
 # --- UPDATED INITIALIZE ROSTER WITH MAPPING ---
+# --- UPDATED INITIALIZE ROSTER (SMARTER IMAGE FINDER) ---
 def initialize_roster():
     target_file = None
     for f in ROSTER_FILES:
@@ -294,34 +295,25 @@ def initialize_roster():
     if target_file:
         try:
             ex_df = pd.read_csv(target_file)
-            ex_df.columns = ex_df.columns.str.strip() # Remove spaces like 'Strength '
+            ex_df.columns = ex_df.columns.str.strip() 
             
             if 'Hero Name' not in ex_df.columns: return False
             ex_df = ex_df.dropna(subset=['Hero Name'])
             
+            # Clear old universe files to ensure we get fresh data
             for f in glob.glob("universe_*.csv"): os.remove(f)
             
             for index, row in ex_df.iterrows():
-                # --- MAPPING OLD COLUMNS TO NEW ---
                 data = {}
                 data['Hero Name'] = str(row.get('Hero Name', ''))
                 data['Real Name'] = str(row.get('Real Name', ''))
-                
-                # Map 'Role / Archetype' to 'Role'
                 data['Role'] = str(row.get('Role / Archetype', row.get('Role', '')))
-                
-                # Map 'Super Powers' to 'Super Power'
                 data['Super Power'] = str(row.get('Super Powers', row.get('Super Power', '')))
-                
-                # Map 'Weaknesses' to 'Weakness'
                 data['Weakness'] = str(row.get('Weaknesses', row.get('Weakness', '')))
-                
-                # Map 'Costume / Visuals' to 'Costume'
                 data['Costume'] = str(row.get('Costume / Visuals', row.get('Costume', '')))
-                
                 data['Signature Move'] = str(row.get('Signature Move', ''))
                 data['Magic'] = str(row.get('Magic', ''))
-                data['Strength'] = str(row.get('Strength', '')) # Strip already handled
+                data['Strength'] = str(row.get('Strength', ''))
                 data['Origin'] = str(row.get('Origin', ''))
                 data['Personality'] = str(row.get('Personality', ''))
                 data['Catchphrase'] = str(row.get('Catchphrase', ''))
@@ -330,24 +322,33 @@ def initialize_roster():
                 data['Speaking Style'] = str(row.get('Speaking Style', ''))
                 data['Relationships'] = str(row.get('Relationships', ''))
                 data['Universe'] = str(row.get('Universe', 'Home'))
-                if not data['Universe']: data['Universe'] = "Home"
+                if not data['Universe'] or data['Universe'].lower() == 'nan': data['Universe'] = "Home"
 
-                # Image Logic
-                img_filename = row.get('Picture Link', '')
-                if not img_filename or str(img_filename).lower() == 'nan':
-                    # Try alternate column
-                    img_filename = row.get('Uploaded Sketch', row.get('Uploaded Photo', ''))
-                
+                # --- NEW SMART IMAGE LOGIC ---
+                # 1. Get the path from Excel (e.g. "C:\Users\Joe\MEGAWATT.png")
+                raw_img_entry = row.get('Picture Link', '')
+                if not raw_img_entry or str(raw_img_entry).lower() == 'nan':
+                     raw_img_entry = row.get('Uploaded Sketch', row.get('Uploaded Photo', ''))
+
                 final_img_path = ""
-                if img_filename and str(img_filename).lower() != 'nan':
-                    img_filename = str(img_filename).strip()
-                    target_path = os.path.join(IMAGE_DIR, os.path.basename(img_filename))
-                    if os.path.exists(img_filename): 
-                        shutil.copy(img_filename, target_path)
+                
+                if raw_img_entry and str(raw_img_entry).lower() != 'nan':
+                    # 2. Strip away the C:\Users... part and just get "MEGAWATT.png"
+                    filename = os.path.basename(str(raw_img_entry).strip())
+                    
+                    # 3. Define where we want it (character_images/MEGAWATT.png)
+                    target_path = os.path.join(IMAGE_DIR, filename)
+                    
+                    # 4. Check if the file exists in the ROOT folder (where GitHub put it)
+                    if os.path.exists(filename):
+                        shutil.copy(filename, target_path)
                         final_img_path = target_path
-                    elif os.path.exists(target_path): 
+                    # 5. Fallback: Check if it's already in the target folder
+                    elif os.path.exists(target_path):
                         final_img_path = target_path
+                
                 data['Image_Path'] = final_img_path
+                # -----------------------------
                 
                 save_character(data)
             return True 
@@ -355,7 +356,6 @@ def initialize_roster():
             print(f"Error initializing: {e}")
             return False
     return False
-
 # --- AI LOGIC ---
 def generate_ai_content(prompt):
     models_to_try = [
