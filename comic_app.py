@@ -426,12 +426,14 @@ if remaining <= 0:
     st.error("⚠️ **SYSTEM OVERHEATING**")
     st.stop()
 
-st.sidebar.markdown("---")
 # --- GITHUB SYNC BUTTON ---
+# --- GITHUB SYNC BUTTON (COMMANDER EDITION) ---
 st.sidebar.divider()
 if st.sidebar.button("☁️ Sync to Cloud (Save)"):
     try:
         from github import Github
+        import glob
+        
         # 1. Get the Key from the Secrets Vault
         token = st.secrets["github"]["token"]
         repo_name = st.secrets["github"]["repo_name"]
@@ -440,34 +442,43 @@ if st.sidebar.button("☁️ Sync to Cloud (Save)"):
         g = Github(token)
         repo = g.get_repo(repo_name)
         
-        # 3. List of files we want to save
-        files_to_save = ["roster_completed.csv"]
-        # Add all images currently in the folder
-        import glob
-        images = glob.glob("character_images/*.png") + glob.glob("character_images/*.jpg")
-        files_to_save.extend(images)
-        
         status_text = st.sidebar.empty()
-        status_text.text("⏳ Connecting to Cloud...")
+        status_text.text("⏳ Scanning for files...")
         
-        # 4. Upload loop
+        # 3. COLLECT ALL FILES TO SAVE
+        files_to_save = ["roster_completed.csv"]
+        
+        # A. Comic Data (Universes, Scripts, Images)
+        files_to_save.extend(glob.glob("universe_*.csv"))
+        files_to_save.extend(glob.glob("character_images/*.png") + glob.glob("character_images/*.jpg"))
+        files_to_save.extend(glob.glob("saved_scripts/*.txt"))
+        
+        if os.path.exists("portfolio.csv"): files_to_save.append("portfolio.csv")
+        if os.path.exists("timeline.csv"): files_to_save.append("timeline.csv")
+
+        # B. SECURITY FILES (Added these for you!)
+        if os.path.exists("security_log.csv"): files_to_save.append("security_log.csv")
+        if os.path.exists("banned_words.txt"): files_to_save.append("banned_words.txt")
+        
+        # 4. UPLOAD LOOP
+        status_text.text(f"⏳ Uploading {len(files_to_save)} files...")
+        
         for file_path in files_to_save:
-            file_name = file_path # e.g., "character_images/Batman.png"
-            
-            # Read the file data
             if os.path.exists(file_path):
                 with open(file_path, "rb") as f:
                     content = f.read()
                 
-                # Check if file exists on GitHub to decide: Update or Create?
+                # Fix path for GitHub
+                github_path = file_path.replace("\\", "/")
+                
                 try:
-                    contents = repo.get_contents(file_name)
-                    repo.update_file(contents.path, f"Update {file_name}", content, contents.sha)
+                    contents = repo.get_contents(github_path)
+                    repo.update_file(contents.path, f"Update {github_path}", content, contents.sha)
                 except:
-                    repo.create_file(file_name, f"Create {file_name}", content)
+                    repo.create_file(github_path, f"Create {github_path}", content)
         
-        status_text.success("✅ Saved to Cloud!")
-        time.sleep(2)
+        status_text.success(f"✅ Synced {len(files_to_save)} files to Cloud!")
+        time.sleep(3)
         status_text.empty()
         
     except Exception as e:
